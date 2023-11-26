@@ -96,4 +96,4 @@ spec:
       each: ${{parameters}}
       input:
         extra: ${{each.value}} > ${{each.key}}
-        message: ${{each.value}} > ${{each.key}}f
+        message: ${{each.value}} > ${{each.key}}
