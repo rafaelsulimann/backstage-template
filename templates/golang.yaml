@@ -1,0 +1,99 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+# some metadata about the template itself
+metadata:
+  name: GitHub API
+  title: GitHub Template
+  description: Teste com Github
+spec:
+  owner: user:guest
+  type: service
+
+  # these are the steps which are rendered in the frontend with the form input
+  parameters:
+    - title: Set the Golang repository type
+      properties:
+        resourceType:
+          title: Select the Golang repository type
+          type: string
+          enum:
+            - lib
+            - ms
+          enumNames:
+            - library
+            - service
+        resourceName:
+          title: Resource name
+          description: Describe a name of golang type
+          type: string
+        resourceVersion:
+          title: Select Golang version
+          type: string
+          enum:
+            - "1.20"
+            - "1.21"
+            - "1.22"
+    - title: Set integration libraries
+      properties:
+        resourceExpose:
+          title: Select expose service
+          type: array
+          items:
+            type: string
+            enum:
+              - https
+              - gRPC
+          uniqueItems: true
+        resourceDbDepends:
+          title: Choose database resources for integration
+          type: string
+          enum:
+            - postgres
+            - mongodb
+        resourceQueueDepends:
+          title: Choose the message resources for integration
+          type: string
+          enum:
+            - message queue
+            - message topic
+            - message stream
+        resourceCacheDepends:
+          title: Enable cache library
+          type: boolean
+    - title: Create repository
+      properties:
+        repoProvider:
+          title: Repository provider
+          type: string
+          default: dev.azure.com
+          enum:
+            - dev.azure.com
+          enumNames:
+            - 'Azure DevOps'
+        repoOrganization:
+          title: Repository organization
+          type: string
+          default: albatross-getnet
+          enum:
+            - albatross-getnet
+          enumNames:
+            - 'Albatross Getnet'
+        repoProject:
+          title: Project name
+          type: string
+          description: Project name from azure devops
+          enum:
+            - pnms-iac
+            - pnms-iac-getnet-br
+          enumNames:
+            - 'PNMS IAC'
+            - 'PNMS IAC GETNET BR'
+
+  steps:
+    - id: debug
+      action: debug:log
+      name: debug
+      each: ${{parameters}}
+      input:
+        extra: ${{each.value}} > ${{each.key}}
+        message: ${{each.value}} > ${{each.key}}f
