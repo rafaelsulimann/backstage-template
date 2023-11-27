@@ -1,0 +1,164 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backstage
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+data:
+  app-config.yaml: |
+    app:
+      title: PagoNxt | Backstage CCOE | Production
+      baseUrl: https://backstage-ccoe.infra.prod.gms.corp
+
+      support:
+        url: https://dev.azure.com/albatross-getnet/Infra%20IaC/_git/backstage-ccoe # Used by common ErrorPage
+        items: # Used by common SupportButton component
+          - title: Issues
+            icon: github
+            links:
+              - url: https://dev.azure.com/albatross-getnet/Infra%20IaC/_git/backstage-ccoe
+                title: Azure DevOps Issues
+
+    organization:
+      name: PagoNxt
+
+    backend:
+      baseUrl: https://backstage-ccoe.infra.prod.gms.corp
+      listen:
+        port: 7007
+        # Uncomment the following host directive to bind to specific interfaces
+        host: 0.0.0.0
+      csp:
+        connect-src: ["'self'", 'http:', 'https:']
+        # Content-Security-Policy directives follow the Helmet format: https://helmetjs.github.io/#reference
+        # Default Helmet Content-Security-Policy values can be removed by setting the key to false
+      cors:
+        origin: https://backstage-ccoe.infra.prod.gms.corp
+        methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+        credentials: true
+
+      database:
+        client: pg
+        connection:
+          host: ${POSTGRES_HOST}
+          port: ${POSTGRES_PORT}
+          user: ${POSTGRES_USER}
+          password: ${POSTGRES_PASSWORD}
+          sslmode: ${POSTGRES_SSL}
+          database: backstage_ccoe
+          ssl:
+            rejectUnauthorized: false
+        pluginDivisionMode: schema
+        cache:
+          store: memory
+
+    integrations:
+      azure:
+        - host: dev.azure.com
+          token: ${AZURE_TOKEN}
+
+    proxy:
+      '/workflow':
+        target: https://workflow.infra.prod.gms.corp/api/v1
+        secure: false
+        changeOrigin: true
+        headers:
+          Authorization: ${WorkflowAuthorization}
+
+      '/playground':
+        target: https://playground-ccoe.infra.prod.gms.corp/api/v1
+        secure: false
+        changeOrigin: true
+
+      '/generate-name':
+        target: https://ccoe-naming.infra.prod.gms.corp/api
+        secure: false
+        changeOrigin: true
+    azureDevOps:
+      host: dev.azure.com
+      token: ${AZURE_TOKEN}
+      organization: albatross-getnet
+      user: albatross-getnet
+
+    techdocs:
+      builder: 'local'
+      generator:
+        runIn: 'local'
+      publisher:
+        type: 'local' 
+        local:
+          publishDirectory: '/techdocs'
+
+    argocd:
+      username: admin
+      password: ${ArgoCDPassword}
+      url: https://gitops.infra.prod.gms.corp
+      appLocatorMethods:
+      - type: 'config'
+        instances:
+          - name: argoInstance1
+            url: https://gitops.infra.prod.gms.corp
+
+    auth:
+      environment: production
+      session: 
+        secret: ${AUTH_OAUTH2_CLIENT_ID}
+      providers:
+        forgerock:
+          production:
+            clientId: ${AUTH_OAUTH2_CLIENT_ID}
+            clientSecret: ${AUTH_OAUTH2_CLIENT_SECRET}
+            authorizationUrl: ${AUTH_OAUTH2_AUTH_URL}
+            tokenUrl: ${AUTH_OAUTH2_TOKEN_URL}
+            prompt: ${AUTH_OAUTH2_PROMPT}
+            metadataUrl: ${AUTH_OAUTH2_METADATA_URL}
+            claims:
+              customClaimName: guid
+
+    scaffolder:
+        defaultAuthor:
+          name: Scaffolder from Backstage
+          email: backstage-noreplay@pagonxt.com
+        defaultCommitMessage: "Initial commit from Backstage"
+
+    catalog:
+      providers:
+        azureDevOps:
+          infra:
+            organization: albatross-getnet
+            project: Infra+IaC
+            repository: gms*
+            path: /catalog/catalog-info.yaml
+            branch: master
+            schedule:
+              frequency: { minutes: 30 }
+              timeout: { minutes: 3 }
+
+      import:
+        entityFilename: catalog-info.yaml
+        pullRequestBranchName: backstage-integration
+      rules:
+        - allow: [Component, System, API, Resource, Domain, Location, Template]
+                
+      locations:
+        - type: url
+          target: https://dev.azure.com/albatross-getnet/Infra%20IaC/_git/backstage-ccoe?path=%2Ftemplates%2Fmanifests%2Fgroups.yaml&version=GBmaster&_a=contents
+          rules:
+            - allow: [User, Group]
+
+        - type: url
+          target: https://dev.azure.com/albatross-getnet/Infra%20IaC/_git/backstage-ccoe?path=%2Ftemplates%2Fmanifests%2Flocation-ccoe.yaml&version=GBmaster&_a=contents
+          rules:
+            - allow: [Template, Location]
+
+        - type: url
+          target: https://dev.azure.com/albatross-getnet/Infra%20IaC/_git/backstage-ccoe?path=%2Ftemplates%2Fmanifests%2Fentities.yaml&version=GBmaster&_a=contents
+
+        - type: url
+          target: https://dev.azure.com/albatross-getnet/Infra%20IaC/_git/backstage-ccoe?path=%2Ftemplates%2Fmanifests%2Forg.yaml&version=GBmaster&_a=contents
+          rules:
+            - allow: [User, Group]
+
+        - type: azure-discovery
+          target: https://dev.azure.com/albatross-getnet/Infra%20IaC/_git/*?path=/catalog/catalog-info.yaml
