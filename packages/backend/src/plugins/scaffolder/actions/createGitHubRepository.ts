@@ -53,10 +53,10 @@ export const createGithubRepository = () => {
 
       if (response.status !== 200) {
         ctx.logger.error(`Erro ao criar repositório ${data}`);
-        return response.json();
+        return data;
       }
       ctx.logger.info(`Repositório ${repositoryName} criado com sucesso!`);
-      return response.json();
+      return data;
     },
   });
 };
