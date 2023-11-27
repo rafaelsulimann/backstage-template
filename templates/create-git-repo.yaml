@@ -28,3 +28,7 @@ spec:
       input:
         repositoryName: ${{ parameters.repositoryName }}
         repositoryUserToken: ${{ parameters.repositoryUserToken }}
+  output:
+    links:
+      - title: ${{ parameters.repositoryName }}
+        url: https://github.com/rafaelsulimann/${{ parameters.repositoryName }}
