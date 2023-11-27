@@ -1,0 +1,288 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: cloud-playground-template
+  title: Cloud playground
+  description: A template for create a azure playground structure
+  tags:
+    - azure
+    - playground
+    - cloud
+spec:
+  owner: group:ccoe-iac
+  type: service
+  parameters:
+    - title: Information about the user
+      properties:
+        userName:
+          title: Username
+          type: string
+          ui:field: UserNameCase
+        userEmail:
+          title: Email
+          type: string
+          ui:field: UserEmailCase
+    - title: Set playground environment
+      required:
+        - projectName
+        - entity
+        - cloudResources
+      properties:
+        projectName:
+          type: string
+          description: Describe the project name
+          default: backstage
+        entity:
+          type: string
+          description: Select the entity
+          ui:field: EntityField
+        days:
+          type: number
+          description: Days that the environment will be on
+          default: 15
+          enum:
+            - 7
+            - 15
+            - 30
+        cloudResources:
+          type: object
+          title: ""
+          required:
+            - name
+          properties:
+            name:
+              type: string
+              defaut: 'basic structure'
+              description: Choose the structure type
+              enum:
+                - basic_structure
+                - cloud_resources
+              enumNames:
+                - basic structure
+                - cloud resources
+          dependencies:
+            name:
+              oneOf:
+                - properties:
+                    name:
+                      enum:
+                        - basic_structure
+                    resourcesBase:
+                      title: Cloud resources
+                      type: string
+                      ui:field: AzureDefaultResourcesField
+                - properties:
+                    name:
+                      enum:
+                        - cloud_resources
+                    resources:
+                      title: Cloud resources
+                      type: string
+                      ui:field: AzureResourcesField
+                      uniqueItems: true
+   
+    - title: Create repository
+      properties:
+        repoProvider:
+          title: Repository provider
+          type: string
+          default: dev.azure.com
+          enum:
+            - dev.azure.com
+          enumNames:
+            - 'Azure DevOps'
+        repoOrganization:
+          title: Repository organization
+          type: string
+          default: albatross-getnet
+          enum:
+            - albatross-getnet
+          enumNames:
+            - 'Albatross Getnet'
+        repoProject:
+          title: Project name
+          type: string
+          description: Project name from azure devops
+          default: 'Infra IaC'
+          enum:
+            - 'Infra IaC'
+          enumNames:
+            - 'Infra IaC'
+
+  steps:
+    - id: authContext
+      name: Get environment
+      action: pagonxt:authContext
+
+    - id: sum-current-date
+      name: Generate date
+      action: pagonxt:sumDate
+      input:
+        days: ${{ parameters.days }}
+      
+    - id: terraformBasicStructure
+      name: Set basic structure of Terraform
+      action: fetch:template
+      if: ${{ parameters.cloudResources.name === "basic_structure" }}
+      input:
+        url: https://dev.azure.com/albatross-getnet/Infra%20IaC/_git/playground-templates?path=/templates/playground/cloudResources/terraform_base_resources&version=GBmaster
+        targetPath: ./terraform
+        values:
+          entity: ${{ parameters.entity }}
+          projectName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          organization: ${{ parameters.repoOrganization }}
+          project: ${{ parameters.repoProject }}
+          repositoryId: ${{ steps.publish.output.repositoryId }}
+          appName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          repositoryName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          userName: ${{ parameters.userName}}
+          userEmail: ${{ parameters.userEmail }}
+          authContext: ${{ steps['authContext'].output.code }}
+
+    - id: terraformCloudResources
+      name: Set basic structure of Terraform
+      action: fetch:template
+      if: ${{ parameters.cloudResources.name === "cloud_resources" }}
+      input:
+        url: https://dev.azure.com/albatross-getnet/Infra%20IaC/_git/playground-templates?path=/templates/playground/cloudResources/terraform_base_resources&version=GBmaster
+        targetPath: ./terraform/base_structure
+        values:
+          entity: ${{ parameters.entity }}
+          projectName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          organization: ${{ parameters.repoOrganization }}
+          project: ${{ parameters.repoProject }}
+          repositoryId: ${{ steps.publish.output.repositoryId }}
+          appName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          repositoryName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          userName: ${{ parameters.userName}}
+          userEmail: ${{ parameters.userEmail }}
+          authContext: ${{ steps['authContext'].output.code }}
+          
+
+    - id: terraformCloudResources
+      name: Get terraform dependencies
+      action: fetch:template
+      if: ${{ parameters.cloudResources.name === "cloud_resources" }}
+      input:
+        url: https://dev.azure.com/albatross-getnet/Infra%20IaC/_git/playground-templates?path=/templates/playground/cloudResources/terraform_other_resources/base&version=GBmaster
+        targetPath: ./terraform/
+        values:
+          entity: ${{ parameters.entity }}
+          projectName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          organization: ${{ parameters.repoOrganization }}
+          project: ${{ parameters.repoProject }}
+          repositoryId: ${{ steps.publish.output.repositoryId }}
+          appName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          repositoryName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          userName: ${{ parameters.userName}}
+          authContext: ${{ steps['authContext'].output.code }}
+
+    - id: terraformCloudResources
+      name: Set cloud resources of Terraform
+      action: fetch:template
+      if: ${{ parameters.cloudResources.name === "cloud_resources" }}
+      input:
+        url: https://dev.azure.com/albatross-getnet/Infra%20IaC/_git/playground-templates?path=/templates/playground/cloudResources/terraform_other_resources/${{ parameters.cloudResources.name }}&version=GBmaster
+        targetPath: ./terraform/
+        values:
+          entity: ${{ parameters.entity }}
+          projectName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          organization: ${{ parameters.repoOrganization }}
+          project: ${{ parameters.repoProject }}
+          repositoryId: ${{ steps.publish.output.repositoryId }}
+          appName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          repositoryName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          userName: ${{ parameters.userName}}
+          authContext: ${{ steps['authContext'].output.code }}
+
+    - id: backstageTemplate
+      name: Set Backstage manifests
+      action: fetch:template
+      input:
+        url: https://dev.azure.com/albatross-getnet/Infra%20IaC/_git/backstage-templates?path=/templates/skeletons/default&version=GBmaster
+        targetPath: ./
+        values:
+          type: sandbox
+          entity: ${{ parameters.entity }}
+          projectName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          organization: ${{ parameters.repoOrganization }}
+          project: ${{ parameters.repoProject }}
+          repositoryId: ${{ steps.publish.output.repositoryId }}
+          appName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          repositoryName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          userName: ${{ parameters.userName}}
+          workflow: true
+          workflow-type: workflows
+          workflow-namespace: namespace
+          authContext: ${{ steps['authContext'].output.code }}
+
+    - id: gitopsTemplate
+      name: Set GitOps manifests
+      action: fetch:template
+      input:
+        url: https://dev.azure.com/albatross-getnet/Infra%20IaC/_git/playground-templates?path=/templates/playground/gitops&version=GBmaster
+        targetPath: ./deployment/gitops
+        values:
+          entity: ${{ parameters.entity }}
+          projectName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          organization: ${{ parameters.repoOrganization }}
+          project: ${{ parameters.repoProject }}
+          repositoryId: ${{ steps.publish.output.repositoryId }}
+          appName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          repositoryName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          repoUrl: https://${{ parameters.repoOrganization }}@dev.azure.com/${{ parameters.repoOrganization }}/${{ parameters.repoProject |replace(" ","%20") }}/_git/playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          userEmail: ${{ parameters.userEmail }}
+          userName: ${{ parameters.userName }}
+          cronDayToDestroy: ${{ steps['sum-current-date'].output.nextDay }}
+          cronMonthToDestroy: ${{ steps['sum-current-date'].output.nextMonth }}
+          cronYearToDestroy: ${{ steps['sum-current-date'].output.nextYear }}
+          authContext: ${{ steps['authContext'].output.code }}
+          imageContext: ${{ steps['authContext'].output.image }}
+          storageAccount: ${{ steps['authContext'].output.storage }}
+          resourceGroup: ${{ steps['authContext'].output.resourceGroup }}
+
+    - id: publish
+      name: Publish
+      action: publish:azure
+      input:
+        allowedHosts: ["dev.azure.com"]
+        description: This is backstage
+        repoUrl: ${{ parameters.repoProvider}}?owner=${{ parameters.repoProject |replace(" ","+") }}&repo=playground-${{ parameters.entity }}-${{ parameters.projectName }}&organization=${{ parameters.repoOrganization }}
+        defaultBranch: master
+        protectDefaultBranch: true
+        repoVisibility: private
+
+    - id: create-argocd-resources
+      name: PagoNxt ArgoCD Resources
+      action: pagonxt:argocd
+      input:
+        appName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+        repositoryName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+        argoInstance: argoInstance1
+        projectName: playground
+        namespace: ns-${{ steps['authContext'].output.code }}-pci-ext-ccoe-sandbox
+        repoUrl: https://${{ parameters.repoOrganization }}@dev.azure.com/${{ parameters.repoOrganization }}/${{ parameters.repoProject |replace(" ","%20") }}/_git/playground-${{ parameters.entity }}-${{ parameters.projectName }}
+        path: "deployment/gitops"
+
+    - id: register
+      name: Register
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
+        catalogInfoPath: '/catalog/catalog-info.yaml'
+        values:
+          entity: ${{ parameters.entity }}
+          projectName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          organization: ${{ parameters.repoOrganization }}
+          project: ${{ parameters.repoProject }}
+          repositoryId: ${{ steps.publish.output.repositoryId }}
+          repositoryName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+          appName: playground-${{ parameters.entity }}-${{ parameters.projectName }}
+
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps['publish'].output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps['register'].output.entityRef }}
