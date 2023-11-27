@@ -28,6 +28,13 @@ spec:
       input:
         repositoryName: ${{ parameters.repositoryName }}
         repositoryUserToken: ${{ parameters.repositoryUserToken }}
+    - id: fetch-base
+      name: Fetch Base
+      action: fetch:template
+      input:
+        url: ./skeletons
+        values:
+          name: ${{ parameters.repositoryName }}
   output:
     links:
       - title: ${{ parameters.repositoryName }}
