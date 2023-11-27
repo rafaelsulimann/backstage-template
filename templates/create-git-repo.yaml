@@ -1,0 +1,30 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+# some metadata about the template itself
+metadata:
+  name: create-git-repo
+  title: Create GitHub Repository
+  description: Create a new GitHub Repository
+spec:
+  owner: user:guest
+  type: service
+
+  parameters:
+    - title: Informe o nome do repositório e seu token
+      properties:
+        repositoryName:
+          title: Repository Name
+          type: string
+          description: Nome do repositório
+        repositoryUserToken:
+          title: User Token
+          type: string
+          description: Github Token
+
+  steps:
+    - id: createGithubRepository
+      action: github:create:repo
+      name: createGithubRepository
+      input:
+        repositoryName: ${{ parameters.repositoryName }}
+        repositoryUserToken: ${{ parameters.repositoryUserToken }}

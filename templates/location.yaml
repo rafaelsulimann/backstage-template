@@ -7,3 +7,4 @@ spec:
   type: url
   targets:
     - https://github.com/rafaelsulimann/backstage/blob/main/templates/golang.yaml
+    - https://github.com/rafaelsulimann/backstage/blob/main/templates/create-git-repo.yaml
