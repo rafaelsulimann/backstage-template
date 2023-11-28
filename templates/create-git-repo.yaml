@@ -10,24 +10,36 @@ spec:
   type: service
 
   parameters:
-    - title: Informe o nome do repositório e seu token
+    - title: Fill in some steps
+      required:
+        - name
       properties:
-        repositoryName:
-          title: Repository Name
+        name:
+          title: Name
           type: string
-          description: Nome do repositório
-        repositoryUserToken:
-          title: User Token
+          description: Unique name of the component
+          ui:autofocus: true
+          ui:options:
+            rows: 5
+    - title: Choose a location
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: Repository Location
           type: string
-          description: Github Token
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
 
   steps:
-    - id: createGithubRepository
-      action: github:create:repo
-      name: createGithubRepository
-      input:
-        repositoryName: ${{ parameters.repositoryName }}
-        repositoryUserToken: ${{ parameters.repositoryUserToken }}
+    # - id: createGithubRepository
+    #   action: github:create:repo
+    #   name: createGithubRepository
+    #   input:
+    #     name: ${{ parameters.name }}
+    #     repositoryUserToken: ${{ parameters.repositoryUserToken }}
     - id: fetch-java
       name: Fetch Java
       action: fetch:template
@@ -35,7 +47,7 @@ spec:
         url: ./skeletons/java
         targetPath: ./app
         values:
-          name: ${{ parameters.repositoryName }}
+          name: ${{ parameters.name }}
     - id: fetch-catalog
       name: Fetch Catalog
       action: fetch:template
@@ -43,15 +55,15 @@ spec:
         url: ./skeletons/default
         targetPath: ./catalog
         values:
-          name: ${{ parameters.repositoryName }}
+          name: ${{ parameters.name }}
     # This step publishes the contents of the working directory to GitHub.
     - id: publish
       name: Publish
       action: publish:github
       input:
         allowedHosts: ['github.com']
-        description: This is ${{ parameters.repositoryName }}
-        repoUrl: github.com?owner=rafaelsulimann&repo=${{ parameters.repositoryName }}
+        description: This is ${{ parameters.name }}
+        repoUrl: github.com?owner=rafaelsulimann&repo=${{ parameters.name }}
     # The final step is to register our new component in the catalog.
     - id: register
       name: Register
@@ -61,5 +73,5 @@ spec:
         catalogInfoPath: '/catalog/catalog-info.yaml'
   output:
     links:
-      - title: ${{ parameters.repositoryName }}
-        url: https://github.com/rafaelsulimann/${{ parameters.repositoryName }}
+      - title: ${{ parameters.name }}
+        url: https://github.com/rafaelsulimann/${{ parameters.name }}
