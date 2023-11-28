@@ -28,13 +28,37 @@ spec:
       input:
         repositoryName: ${{ parameters.repositoryName }}
         repositoryUserToken: ${{ parameters.repositoryUserToken }}
-    - id: fetch-base
-      name: Fetch Base
+    - id: fetch-java
+      name: Fetch Java
       action: fetch:template
       input:
-        url: ./skeletons
+        url: ./skeletons/java
+        targetPath: ./app
         values:
           name: ${{ parameters.repositoryName }}
+    - id: fetch-catalog
+      name: Fetch Catalog
+      action: fetch:template
+      input:
+        url: ./skeletons/default
+        targetPath: ./catalog
+        values:
+          name: ${{ parameters.repositoryName }}
+    # This step publishes the contents of the working directory to GitHub.
+    - id: publish
+      name: Publish
+      action: publish:github
+      input:
+        allowedHosts: ['github.com']
+        description: This is ${{ parameters.repositoryName }}
+        repoUrl: https://github.com/rafaelsulimann/${{ parameters.repositoryName }}
+    # The final step is to register our new component in the catalog.
+    - id: register
+      name: Register
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
+        catalogInfoPath: '/catalog/catalog-info.yaml'
   output:
     links:
       - title: ${{ parameters.repositoryName }}

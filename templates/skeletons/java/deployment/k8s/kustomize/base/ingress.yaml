@@ -1,0 +1,23 @@
+# Source: default-spring/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: backstage-spring
+  labels:
+    helm.sh/chart: default-spring-0.1.0
+    app.kubernetes.io/name: default-spring
+    app.kubernetes.io/instance: spring
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  rules:
+    - host: "initial-java-spring.prod.sulimann.com"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: backstage-spring
+                port:
+                  number: 80

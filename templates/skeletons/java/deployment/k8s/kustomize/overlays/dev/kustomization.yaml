@@ -1,0 +1,9 @@
+bases:
+  - ../../base
+patchesStrategicMerge:
+  - ingress.yaml
+  - deployment.yaml
+images:
+  - name: rafaelsulimann/initial-java-spring
+    newName: rafaelsulimann/initial-java-spring
+    newTag: "v1.0.1"

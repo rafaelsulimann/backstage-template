@@ -1,0 +1,74 @@
+# Source: default-spring/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backstage-spring
+  labels:
+    helm.sh/chart: default-spring-0.1.0
+    app.kubernetes.io/name: default-spring
+    app.kubernetes.io/instance: spring
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+automountServiceAccountToken: true
+---
+# Source: default-spring/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: backstage-spring
+  labels:
+    helm.sh/chart: default-spring-0.1.0
+    app.kubernetes.io/name: default-spring
+    app.kubernetes.io/instance: spring
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: default-spring
+    app.kubernetes.io/instance: spring
+---
+# Source: default-spring/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backstage-spring
+  labels:
+    helm.sh/chart: default-spring-0.1.0
+    app.kubernetes.io/name: default-spring
+    app.kubernetes.io/instance: spring
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: default-spring
+      app.kubernetes.io/instance: spring
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: default-spring-0.1.0
+        app.kubernetes.io/name: default-spring
+        app.kubernetes.io/instance: spring
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: backstage-spring
+      securityContext:
+        {}
+      containers:
+        - name: default-spring
+          securityContext:
+            {}
+          image: "rafaelsulimann/initial-java-spring:v1.0.1"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
