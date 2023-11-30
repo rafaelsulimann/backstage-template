@@ -66,6 +66,14 @@ spec:
         allowedHosts: ['github.com']
         description: This is ${{ parameters.name }}
         repoUrl: github.com?owner=rafaelsulimann&repo=${{ parameters.name }}
+    - id: commitSkeleton
+      name: Commit Skeleton
+      action: rafael:commitSkeleton
+      input:
+        allowedHosts: ['github.com']
+        description: This is ${{ parameters.name }}
+        remoteUrl: ${{ steps['publish'].output.remoteUrl }}
+        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
   output:
     links:
       - title: ${{ parameters.name }}

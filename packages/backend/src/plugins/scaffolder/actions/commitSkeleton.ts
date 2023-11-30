@@ -1,24 +1,28 @@
 import { createTemplateAction } from '@backstage/plugin-scaffolder-backend';
+import { Config } from '@backstage/config';
 import { Octokit } from 'octokit';
 import { InputError } from '@backstage/errors';
 import {
   ScmIntegrationRegistry,
 } from '@backstage/integration';
 import {
-  createGithubRepoWithCollaboratorsAndTopics,
   getOctokitOptions,
+  initRepoPushAndProtect,
 } from './github/helpers';
 import { examples } from './examples';
 import * as inputProps from './inputProperties';
 import * as outputProps from './outputProperties';
 import { parseRepoUrl } from './util';
 
-export function createRepo(options: {
-integrations: ScmIntegrationRegistry;
+export function commitSkeleton(options: {
+  integrations: ScmIntegrationRegistry;
+  config: Config;
 }) {
-  const { integrations } = options;
+  const { integrations, config} = options;
 
   return createTemplateAction<{
+    remoteUrl: string,
+    repoContentsUrl: string,
     repoUrl: string;
     description?: string;
     homepage?: string;
@@ -82,7 +86,7 @@ integrations: ScmIntegrationRegistry;
     secrets?: { [key: string]: string };
     requiredCommitSigning?: boolean;
   }>({
-    id: 'rafael:createRepo',
+    id: 'rafael:commitSkeleton',
     description:
       'Initializes a git repository of contents in workspace and publishes it to GitHub.',
     examples,
@@ -91,6 +95,16 @@ integrations: ScmIntegrationRegistry;
         type: 'object',
         required: ['repoUrl'],
         properties: {
+          remoteUrl: {
+            type: 'string',
+            title: 'Remote URL',
+            description: 'Remote URL',
+          },
+          repoContentsUrl: {
+            type: 'string',
+            title: 'Content',
+            description: 'Content',
+          },
           repoUrl: inputProps.repoUrl,
           description: inputProps.description,
           homepage: inputProps.homepage,
@@ -141,26 +155,24 @@ integrations: ScmIntegrationRegistry;
     },
     async handler(ctx) {
       const {
+        remoteUrl= ctx.input.remoteUrl,
+        repoContentsUrl = ctx.input.repoContentsUrl,
         repoUrl,
-        description,
-        homepage,
-        access,
-        repoVisibility = 'private',
+        requireCodeOwnerReviews = false,
+        dismissStaleReviews = false,
+        bypassPullRequestAllowances,
+        requiredApprovingReviewCount = 1,
+        restrictions,
+        requiredStatusCheckContexts = [],
+        requireBranchesToBeUpToDate = true,
+        requiredConversationResolution = false,
         defaultBranch = 'master',
-        deleteBranchOnMerge = false,
-        allowMergeCommit = true,
-        allowSquashMerge = true,
-        squashMergeCommitTitle = 'COMMIT_OR_PR_TITLE',
-        squashMergeCommitMessage = 'COMMIT_MESSAGES',
-        allowRebaseMerge = true,
-        allowAutoMerge = false,
-        collaborators,
-        hasProjects = undefined,
-        hasWiki = undefined,
-        hasIssues = undefined,
-        topics,
-        repoVariables,
-        secrets,
+        protectDefaultBranch = true,
+        protectEnforceAdmins = true,
+        gitCommitMessage = 'initial commit',
+        gitAuthorName,
+        gitAuthorEmail,
+        requiredCommitSigning = false,
       } = ctx.input;
 
       const octokitOptions = await getOctokitOptions({
@@ -175,34 +187,34 @@ integrations: ScmIntegrationRegistry;
         throw new InputError('Invalid repository owner provided in repoUrl');
       }
 
-      const newRepo = await createGithubRepoWithCollaboratorsAndTopics(
+      const commitResult = await initRepoPushAndProtect(
+        remoteUrl,
+        octokitOptions.auth,
+        ctx.workspacePath,
+        ctx.input.sourcePath,
+        defaultBranch,
+        protectDefaultBranch,
+        protectEnforceAdmins,
+        owner,
         client,
         repo,
-        owner,
-        repoVisibility,
-        description,
-        homepage,
-        deleteBranchOnMerge,
-        allowMergeCommit,
-        allowSquashMerge,
-        squashMergeCommitTitle,
-        squashMergeCommitMessage,
-        allowRebaseMerge,
-        allowAutoMerge,
-        access,
-        collaborators,
-        hasProjects,
-        hasWiki,
-        hasIssues,
-        topics,
-        repoVariables,
-        secrets,
+        requireCodeOwnerReviews,
+        bypassPullRequestAllowances,
+        requiredApprovingReviewCount,
+        restrictions,
+        requiredStatusCheckContexts,
+        requireBranchesToBeUpToDate,
+        requiredConversationResolution,
+        config,
         ctx.logger,
+        gitCommitMessage,
+        gitAuthorName,
+        gitAuthorEmail,
+        dismissStaleReviews,
+        requiredCommitSigning,
       );
 
-      const remoteUrl = newRepo.clone_url;
-      const repoContentsUrl = `${newRepo.html_url}/blob/${defaultBranch}`;
-
+      ctx.output('commitHash', commitResult?.commitHash);
       ctx.output('remoteUrl', remoteUrl);
       ctx.output('repoContentsUrl', repoContentsUrl);
     },
