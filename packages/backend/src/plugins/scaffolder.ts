@@ -4,6 +4,7 @@ import { Router } from 'express';
 import type { PluginEnvironment } from '../types';
 import { createGithubRepository } from './scaffolder/actions/createGitHubRepository'
 import { ScmIntegrations } from '@backstage/integration';
+import { createRepo } from './scaffolder/actions/createRepo';
 
 export default async function createPlugin(
   env: PluginEnvironment,
@@ -11,7 +12,7 @@ export default async function createPlugin(
   const catalogClient = new CatalogClient({
     discoveryApi: env.discovery,
   });
-  const integrations = ScmIntegrations.fromConfig(env.config);
+  const integrations: any = ScmIntegrations.fromConfig(env.config);
 
   const builtInActions = createBuiltinActions({
     integrations,
@@ -21,7 +22,8 @@ export default async function createPlugin(
   });
 
   const actions = [...builtInActions, 
-    createGithubRepository()
+    createGithubRepository(),
+    createRepo(integrations)
   ];
 
   return await createRouter({

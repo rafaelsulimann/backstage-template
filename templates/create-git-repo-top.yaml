@@ -34,12 +34,6 @@ spec:
               - github.com
 
   steps:
-    # - id: createGithubRepository
-    #   action: github:create:repo
-    #   name: createGithubRepository
-    #   input:
-    #     name: ${{ parameters.name }}
-    #     repositoryUserToken: ${{ parameters.repositoryUserToken }}
     - id: fetch-java
       name: Fetch Java
       action: fetch:template
@@ -67,18 +61,11 @@ spec:
     # This step publishes the contents of the working directory to GitHub.
     - id: publish
       name: Publish
-      action: publish:github
+      action: rafael:createRepo
       input:
         allowedHosts: ['github.com']
         description: This is ${{ parameters.name }}
         repoUrl: github.com?owner=rafaelsulimann&repo=${{ parameters.name }}
-    # The final step is to register our new component in the catalog.
-    - id: register
-      name: Register
-      action: catalog:register
-      input:
-        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
-        catalogInfoPath: '/catalog/catalog-info.yaml'
   output:
     links:
       - title: ${{ parameters.name }}

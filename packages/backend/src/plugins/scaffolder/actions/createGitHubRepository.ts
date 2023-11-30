@@ -1,4 +1,9 @@
 import { createTemplateAction } from '@backstage/plugin-scaffolder-backend';
+import { Git } from '@backstage/backend-common';
+import { Config } from '@backstage/config';
+import { assertError } from '@backstage/errors';
+import { Octokit } from 'octokit';
+import { Logger } from 'winston';
 
 export const createGithubRepository = () => {
   return createTemplateAction<{
@@ -30,7 +35,6 @@ export const createGithubRepository = () => {
 
       ctx.logger.info(`Repository Name ${repositoryName}`);
       ctx.logger.info(`Repository UserToken ${repositoryUserToken}`);
-
       const response = await fetch(`https://api.github.com/user/repos`, {
         method: 'POST',
         headers: {

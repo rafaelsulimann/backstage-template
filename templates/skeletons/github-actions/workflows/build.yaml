@@ -1,0 +1,25 @@
+name: Build
+on:
+  push:
+    branches:
+      - master
+    # tags-ignore:
+    #   - '*'
+    # paths-ignore:
+    # - ".github/**"
+env:
+  REGISTRY: rafaelsulimann
+  IMAGE_BASE_NAME: ${{ github.repository }}
+  DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
+  DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+jobs:
+
+  publish:
+    runs-on:  [ "self-hosted", "linux", "x64" ]
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+        
+      - name: Publish
+        uses: ./.github/actions/publish
