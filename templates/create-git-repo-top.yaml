@@ -2,8 +2,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 # some metadata about the template itself
 metadata:
-  name: create-git-repo
-  title: Create GitHub Repository
+  name: create-git-repo-personalizado
+  title: Create GitHub Repository Personalizado
   description: Create a new GitHub Repository
 spec:
   owner: user:guest
