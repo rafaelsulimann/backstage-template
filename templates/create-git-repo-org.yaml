@@ -81,5 +81,8 @@ spec:
         catalogInfoPath: '/catalog/catalog-info.yaml'
   output:
     links:
-      - title: ${{ parameters.name }}
-        url: https://github.com/rafaelsulimann/${{ parameters.name }}
+      - title: Repository
+        url: ${{ steps['publish'].output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps['register'].output.entityRef }}
