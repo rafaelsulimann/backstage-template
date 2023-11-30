@@ -43,6 +43,20 @@ integrations:
     #   apiBaseUrl: https://ghe.example.net/api/v3
     #   token: ${GHE_TOKEN}
 
+kubernetes:
+  serviceLocatorMethod:
+    type: 'multiTenant'
+  clusterLocatorMethods:
+    - type: 'config'
+      clusters:
+        - url: https://0.0.0.0:45403
+          name: k3d-teste
+          authProvider: 'serviceAccount'
+          skipTLSVerify: false
+          skipMetricsLookup: true
+          serviceAccountToken: eyJhbGciOiJSUzI1NiIsImtpZCI6IlAwbUZmWWlwdkdaenZYTzdpZU9keUc3ZEdMMmh5Mk5PWl9aT0NtTm44QkEifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImRlZmF1bHQtdG9rZW4iLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiZGVmYXVsdCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjFiYzQ2ZTNlLTgzNzMtNGFmOC1iNzRhLTFjZmViMzAwYWE1OCIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDpkZWZhdWx0OmRlZmF1bHQifQ.lhJi0Hpo7zVPJ54wbiZ7GqZ5FQZR1uh1vAWZtuICiKWB34ZNcLXAFUcYRv_n6eWX5O32jtsd_lgREi5dKAy_tkFh7G5SMFWDxeKXx8OeyKuvDI3-Uusafy4V0VCXvg8_ANNlmGjKAS1T4-pJc-3WRLDFJOMhgWcHKOLNNd55aSWmKBvGkD__g3FVRBUxB_V-7om-mj3GpxAHXPLIgBEyVMsfDHoJNmxwIH8WJLHYym2BC3xWRvmZaajsvmaeB4L8-9F-m1yEGRRXiH8ec7I3h-Y8M5dm1oIoehPRN-sdVOZ5hD77C4cQOaGnRKTPSCqoudMO_nVYsRdHzBLbOJTcgg
+          #caData: ${K8S_CONFIG_CA_DATA}
+          caFile: '../../ca.crt' # local path to CA file
 proxy:
   ### Example for how to add a proxy endpoint for the frontend.
   ### A typical reason to do this is to handle HTTPS and CORS for internal services.

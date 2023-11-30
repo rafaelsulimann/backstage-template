@@ -1,0 +1,85 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+# some metadata about the template itself
+metadata:
+  name: create-git-repo
+  title: Create GitHub Repository
+  description: Create a new GitHub Repository
+spec:
+  owner: user:guest
+  type: service
+
+  parameters:
+    - title: Fill in some steps
+      required:
+        - name
+      properties:
+        name:
+          title: Name
+          type: string
+          description: Unique name of the component
+          ui:autofocus: true
+          ui:options:
+            rows: 5
+    - title: Choose a location
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: Repository Location
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+
+  steps:
+    # - id: createGithubRepository
+    #   action: github:create:repo
+    #   name: createGithubRepository
+    #   input:
+    #     name: ${{ parameters.name }}
+    #     repositoryUserToken: ${{ parameters.repositoryUserToken }}
+    - id: fetch-java
+      name: Fetch Java
+      action: fetch:template
+      input:
+        url: ./skeletons/java
+        targetPath: ./app
+        values:
+          name: ${{ parameters.name }}
+    - id: fetch-catalog
+      name: Fetch Catalog
+      action: fetch:template
+      input:
+        url: ./skeletons/default
+        targetPath: ./catalog
+        values:
+          name: ${{ parameters.name }}
+    - id: fetch-github-actions
+      name: Fetch GitHub Actions
+      action: fetch:template
+      input:
+        url: ./skeletons/github-actions
+        targetPath: ./.github
+        values:
+          name: ${{ parameters.name }}
+    # This step publishes the contents of the working directory to GitHub.
+    - id: publish
+      name: Publish
+      action: publish:github
+      input:
+        allowedHosts: ['github.com']
+        description: This is ${{ parameters.name }}
+        repoUrl: ${{ parameters.repoUrl }}
+    # The final step is to register our new component in the catalog.
+    - id: register
+      name: Register
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
+        catalogInfoPath: '/catalog/catalog-info.yaml'
+  output:
+    links:
+      - title: ${{ parameters.name }}
+        url: https://github.com/rafaelsulimann/${{ parameters.name }}
