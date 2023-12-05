@@ -1,0 +1,25 @@
+name: Deploy
+on: 
+  workflow_run:
+    workflows: [ "Build" ]
+    types: [ "completed" ]
+
+jobs:
+  deploy-dev:
+    runs-on:  [ "self-hosted", "linux", "x64" ]
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2      
+        with:
+          fetch-depth: 0
+      
+      - name: Last tag
+        id: version
+        run: |
+          app_version=$(git describe --tags --abbrev=0)
+          echo "app_version=$app_version" >> $GITHUB_ENV
+
+      - name: Deploy K8s
+        uses: ./.github/actions/deploy
+        with:
+          app_version: ${{env.app_version}}

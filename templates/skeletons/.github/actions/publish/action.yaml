@@ -1,0 +1,34 @@
+name: 'Publish'
+description: 'Publish images'
+inputs:
+  access_token:
+    description: 'Application version'
+    required: true
+  github_user:
+    description: 'Application version'
+    required: true
+  # docker_password:
+  #   description: 'Application version'
+  #   required: true
+  # docker_user:
+  #   description: 'Application version'
+  #   required: true
+runs:
+  using: "composite"
+  steps:
+
+        #echo ${{ inputs.docker_password }} | docker login -u ${{ inputs.docker_user }} --password-stdin
+    - run: |
+        echo ${{ inputs.access_token }} | docker login ghcr.io -u ${{ inputs.github_user }} --password-stdin
+        IMAGENAME=${{ values.name }}
+        cd app/default-spring
+        docker build \
+          --file ./Dockerfile \
+          --no-cache=true \
+          -t ${{ env.REGISTRY }}/${IMAGENAME}:${{ github.run_number }} .
+        docker tag ${{ env.REGISTRY }}/${IMAGENAME}:${{ github.run_number }} ${{ env.REGISTRY }}/${IMAGENAME}:latest
+        docker push ${{ env.REGISTRY }}/${IMAGENAME}:${{ github.run_number }}
+        docker push ${{ env.REGISTRY }}/${IMAGENAME}:latest
+        cd ../../
+        
+      shell: bash

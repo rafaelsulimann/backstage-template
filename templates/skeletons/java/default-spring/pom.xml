@@ -5,16 +5,16 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.2.0</version>
+		<version>${{ values.spring-boot-version}}</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.sulimann</groupId>
-	<artifactId>default-spring</artifactId>
+	<artifactId>${{ values.name }}</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>default-spring</name>
+	<name>${{ values.name }}</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
-		<java.version>17</java.version>
+		<java.version>${{ values.java-version }}</java.version>
 	</properties>
 	<dependencies>
 		<dependency>
